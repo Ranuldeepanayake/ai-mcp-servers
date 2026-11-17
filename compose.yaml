@@ -1,0 +1,26 @@
+# Local-only Docker Compose runner; this is intentionally separate from .devcontainer.
+name: aws-mcp-server-local
+
+services:
+  aws-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      # Host applications use http://localhost:8000/mcp.
+      - "${MCP_HOST_PORT:-8000}:8000"
+    environment:
+      # The container listens on all interfaces so Docker can publish the endpoint.
+      MCP_TRANSPORT: streamable-http
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8000
+      AWS_PROFILE: ${AWS_PROFILE:-super-user}
+      AWS_REGION: ${AWS_REGION:-ap-southeast-1}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-southeast-1}
+      AWS_SDK_LOAD_CONFIG: "1"
+    volumes:
+      # Set AWS_CONFIG_DIR when the host credentials are not under USERPROFILE/.aws.
+      - type: bind
+        source: ${AWS_CONFIG_DIR:-${USERPROFILE}/.aws}
+        target: /home/aws-mcp/.aws
+        read_only: true
